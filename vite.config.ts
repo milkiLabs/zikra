@@ -4,6 +4,7 @@ import devtools from "solid-devtools/vite";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  base: "/zikra/",
   plugins: [
     devtools(),
     solidPlugin(),
@@ -16,12 +17,12 @@ export default defineConfig({
         short_name: "Zikra",
         description:
           "A local-first PWA for collecting and organizing resources from across the internet",
-        start_url: "/",
+        start_url: "/zikra/",
         display: "standalone",
         background_color: "#1f2937",
         theme_color: "#3b82f6",
         orientation: "any",
-        scope: "/",
+        scope: "/zikra/",
         icons: [
           {
             src: "/icons/icon-72x72.png",
@@ -73,7 +74,7 @@ export default defineConfig({
           },
         ],
         share_target: {
-          action: "/share-target",
+          action: "/zikra/share-target",
           method: "GET",
           params: {
             title: "title",
@@ -87,7 +88,7 @@ export default defineConfig({
             name: "Add Resource",
             short_name: "Add",
             description: "Add a new resource to your library",
-            url: "/?action=add",
+            url: "/zikra/?action=add",
             icons: [
               {
                 src: "/icons/add-96x96.png",
@@ -100,7 +101,7 @@ export default defineConfig({
             name: "Settings",
             short_name: "Settings",
             description: "Open app settings",
-            url: "/settings",
+            url: "/zikra/settings",
             icons: [
               {
                 src: "/icons/settings-96x96.png",
