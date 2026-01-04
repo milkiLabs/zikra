@@ -2,34 +2,34 @@
  * Button Component
  */
 
-import { Component, JSX, splitProps, Show } from 'solid-js';
-import { LoaderIcon } from './icons';
+import { Component, JSX, splitProps, Show } from "solid-js";
+import { LoaderIcon } from "./icons";
 
 export interface ButtonProps extends JSX.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "ghost" | "danger" | "outline";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
   icon?: JSX.Element;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   fullWidth?: boolean;
 }
 
 export const Button: Component<ButtonProps> = (props) => {
   const [local, rest] = splitProps(props, [
-    'variant',
-    'size',
-    'loading',
-    'icon',
-    'iconPosition',
-    'fullWidth',
-    'class',
-    'children',
-    'disabled',
+    "variant",
+    "size",
+    "loading",
+    "icon",
+    "iconPosition",
+    "fullWidth",
+    "class",
+    "children",
+    "disabled",
   ]);
 
-  const variant = () => local.variant || 'primary';
-  const size = () => local.size || 'md';
-  const iconPos = () => local.iconPosition || 'left';
+  const variant = () => local.variant || "primary";
+  const size = () => local.size || "md";
+  const iconPos = () => local.iconPosition || "left";
 
   const baseStyles = `
     inline-flex items-center justify-center gap-2 
@@ -71,9 +71,9 @@ export const Button: Component<ButtonProps> = (props) => {
   };
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg',
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg",
   };
 
   return (
@@ -84,20 +84,20 @@ export const Button: Component<ButtonProps> = (props) => {
         ${baseStyles}
         ${variantStyles[variant()]}
         ${sizeStyles[size()]}
-        ${local.fullWidth ? 'w-full' : ''}
-        ${local.class || ''}
+        ${local.fullWidth ? "w-full" : ""}
+        ${local.class || ""}
       `}
     >
       <Show when={local.loading}>
-        <LoaderIcon size={size() === 'sm' ? 14 : size() === 'lg' ? 22 : 18} />
+        <LoaderIcon size={size() === "sm" ? 14 : size() === "lg" ? 22 : 18} />
       </Show>
-      <Show when={!local.loading && local.icon && iconPos() === 'left'}>
+      <Show when={!local.loading && local.icon && iconPos() === "left"}>
         {local.icon}
       </Show>
       <Show when={local.children}>
         <span>{local.children}</span>
       </Show>
-      <Show when={!local.loading && local.icon && iconPos() === 'right'}>
+      <Show when={!local.loading && local.icon && iconPos() === "right"}>
         {local.icon}
       </Show>
     </button>

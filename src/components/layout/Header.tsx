@@ -78,24 +78,6 @@ export const Header: Component<HeaderProps> = (props) => {
           <div class="flex items-center gap-2">
             {/* Sync Widget - handles all sync/connection UI */}
             <SyncWidget />
-
-            {/* Add Resource Button */}
-            <Button
-              onClick={props.onAddClick}
-              size="sm"
-              icon={<PlusIcon size={18} />}
-              class="hidden sm:flex"
-            >
-              Add
-            </Button>
-            
-            {/* Mobile Add Button */}
-            <button
-              onClick={props.onAddClick}
-              class="sm:hidden p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <PlusIcon size={20} />
-            </button>
           </div>
         </div>
       </div>

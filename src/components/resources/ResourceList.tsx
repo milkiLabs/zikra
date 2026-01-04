@@ -1,49 +1,52 @@
 /**
  * Resource List Component
- * 
+ *
  * Displays a list of resources with filtering and sorting.
  */
 
-import { 
-  Component, 
-  createSignal, 
-  createMemo, 
-  For, 
+import {
+  Component,
+  createSignal,
+  createMemo,
+  For,
   Show,
   createEffect,
-} from 'solid-js';
-import type { Resource, ResourceFilter, ResourceType } from '../../types';
-import { 
-  filterResources, 
-  selectCategoriesArray, 
-  selectTopicsArray 
-} from '../../lib/stores';
-import { ResourceCard } from './ResourceCard';
-import { Input, Select, Button, Badge } from '../ui';
-import { 
-  SearchIcon, 
-  FilterIcon, 
-  GridIcon, 
+} from "solid-js";
+import type { Resource, ResourceFilter, ResourceType } from "../../types";
+import {
+  filterResources,
+  selectCategoriesArray,
+  selectTopicsArray,
+} from "../../lib/stores";
+import { ResourceCard } from "./ResourceCard";
+import { Input, Select, Button, Badge } from "../ui";
+import {
+  SearchIcon,
+  FilterIcon,
+  GridIcon,
   ListIcon,
   PlusIcon,
   XIcon,
-} from '../ui/icons';
-import { getResourceTypeName, getResourceTypeIcon } from '../../lib/detection/detector';
+} from "../ui/icons";
+import {
+  getResourceTypeName,
+  getResourceTypeIcon,
+} from "../../lib/detection/detector";
 
 const RESOURCE_TYPES: ResourceType[] = [
-  'youtube-video',
-  'youtube-short',
-  'youtube-playlist',
-  'youtube-channel',
-  'book',
-  'research-paper',
-  'article',
-  'webpage',
-  'podcast',
-  'podcast-episode',
-  'twitter-thread',
-  'github-repo',
-  'custom',
+  "youtube-video",
+  "youtube-short",
+  "youtube-playlist",
+  "youtube-channel",
+  "book",
+  "research-paper",
+  "article",
+  "webpage",
+  "podcast",
+  "podcast-episode",
+  "twitter-thread",
+  "github-repo",
+  "custom",
 ];
 
 export interface ResourceListProps {
@@ -54,17 +57,21 @@ export interface ResourceListProps {
 
 export const ResourceList: Component<ResourceListProps> = (props) => {
   // View state
-  const [view, setView] = createSignal<'grid' | 'list' | 'compact'>('grid');
+  const [view, setView] = createSignal<"grid" | "list" | "compact">("grid");
   const [showFilters, setShowFilters] = createSignal(false);
 
   // Filter state
-  const [search, setSearch] = createSignal('');
+  const [search, setSearch] = createSignal("");
   const [selectedTypes, setSelectedTypes] = createSignal<ResourceType[]>([]);
-  const [selectedCategories, setSelectedCategories] = createSignal<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = createSignal<string[]>(
+    [],
+  );
   const [selectedTopics, setSelectedTopics] = createSignal<string[]>([]);
   const [showFavoritesOnly, setShowFavoritesOnly] = createSignal(false);
-  const [sortBy, setSortBy] = createSignal<'createdAt' | 'updatedAt' | 'title'>('createdAt');
-  const [sortOrder, setSortOrder] = createSignal<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = createSignal<"createdAt" | "updatedAt" | "title">(
+    "createdAt",
+  );
+  const [sortOrder, setSortOrder] = createSignal<"asc" | "desc">("desc");
 
   // Data
   const categories = selectCategoriesArray;
@@ -74,10 +81,11 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
   const filter = createMemo<ResourceFilter>(() => ({
     search: search() || undefined,
     types: selectedTypes().length > 0 ? selectedTypes() : undefined,
-    categoryIds: selectedCategories().length > 0 ? selectedCategories() : undefined,
+    categoryIds:
+      selectedCategories().length > 0 ? selectedCategories() : undefined,
     topicIds: selectedTopics().length > 0 ? selectedTopics() : undefined,
     isFavorite: showFavoritesOnly() ? true : undefined,
-    status: ['active'], // Only show active resources
+    status: ["active"], // Only show active resources
     sortBy: sortBy(),
     sortOrder: sortOrder(),
   }));
@@ -97,7 +105,7 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
 
   // Clear all filters
   const clearFilters = () => {
-    setSearch('');
+    setSearch("");
     setSelectedTypes([]);
     setSelectedCategories([]);
     setSelectedTopics([]);
@@ -110,30 +118,38 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
     label: `${getResourceTypeIcon(t)} ${getResourceTypeName(t)}`,
   }));
 
-  const categoryOptions = createMemo(() => 
+  const categoryOptions = createMemo(() =>
     categories().map((c) => ({
       value: c.id,
       label: c.name,
       color: c.color,
-    }))
+    })),
   );
 
-  const topicOptions = createMemo(() => 
+  const topicOptions = createMemo(() =>
     topics().map((t) => ({
       value: t.id,
       label: t.name,
       color: t.color,
-    }))
+    })),
   );
 
   const sortOptions = [
-    { value: 'createdAt', label: 'Date Added' },
-    { value: 'updatedAt', label: 'Date Modified' },
-    { value: 'title', label: 'Title' },
+    { value: "createdAt", label: "Date Added" },
+    { value: "updatedAt", label: "Date Modified" },
+    { value: "title", label: "Title" },
   ];
 
   return (
     <div class="space-y-4">
+      {/* Mobile FAB */}
+      <button
+        onClick={props.onAddClick}
+        class="fixed bottom-6 right-6 sm:hidden p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 z-50"
+      >
+        <PlusIcon size={24} />
+      </button>
+
       {/* Header */}
       <div class="flex flex-col sm:flex-row gap-4">
         {/* Search */}
@@ -144,7 +160,7 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
             onInput={(e) => setSearch(e.currentTarget.value)}
             icon={<SearchIcon size={18} />}
             clearable
-            onClear={() => setSearch('')}
+            onClear={() => setSearch("")}
             fullWidth
           />
         </div>
@@ -153,35 +169,41 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
         <div class="flex items-center gap-2">
           {/* Filter toggle */}
           <Button
-            variant={showFilters() ? 'primary' : 'secondary'}
+            variant={showFilters() ? "primary" : "secondary"}
             onClick={() => setShowFilters(!showFilters())}
             icon={<FilterIcon size={18} />}
           >
             <span class="hidden sm:inline">Filters</span>
             <Show when={activeFilterCount() > 0}>
-              <Badge size="sm" variant="primary">{activeFilterCount()}</Badge>
+              <Badge size="sm" variant="primary">
+                {activeFilterCount()}
+              </Badge>
             </Show>
           </Button>
 
           {/* View toggle */}
           <div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
             <button
-              onClick={() => setView('grid')}
-              class={`p-2 ${view() === 'grid' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              onClick={() => setView("grid")}
+              class={`p-2 ${view() === "grid" ? "bg-gray-100 dark:bg-gray-700" : "hover:bg-gray-50 dark:hover:bg-gray-800"}`}
             >
               <GridIcon size={18} />
             </button>
             <button
-              onClick={() => setView('list')}
-              class={`p-2 ${view() === 'list' ? 'bg-gray-100 dark:bg-gray-700' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              onClick={() => setView("list")}
+              class={`p-2 ${view() === "list" ? "bg-gray-100 dark:bg-gray-700" : "hover:bg-gray-50 dark:hover:bg-gray-800"}`}
             >
               <ListIcon size={18} />
             </button>
           </div>
 
-          {/* Add button */}
-          <Button onClick={props.onAddClick} icon={<PlusIcon size={18} />}>
-            <span class="hidden sm:inline">Add</span>
+          {/* Add button - desktop only */}
+          <Button
+            onClick={props.onAddClick}
+            icon={<PlusIcon size={18} />}
+            class="!hidden sm:!inline-flex" // Added ! to both
+          >
+            Add
           </Button>
         </div>
       </div>
@@ -231,7 +253,9 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
               label="Sort by"
               options={sortOptions}
               value={sortBy()}
-              onChange={(v) => setSortBy(v as 'createdAt' | 'updatedAt' | 'title')}
+              onChange={(v) =>
+                setSortBy(v as "createdAt" | "updatedAt" | "title")
+              }
               placeholder="Sort by"
               fullWidth
             />
@@ -263,7 +287,8 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
 
       {/* Results count */}
       <div class="text-sm text-gray-500 dark:text-gray-400">
-        {filteredResources().length} resource{filteredResources().length !== 1 ? 's' : ''}
+        {filteredResources().length} resource
+        {filteredResources().length !== 1 ? "s" : ""}
         <Show when={activeFilterCount() > 0 || search()}>
           <span> matching your filters</span>
         </Show>
@@ -279,26 +304,21 @@ export const ResourceList: Component<ResourceListProps> = (props) => {
               No resources found
             </h3>
             <p class="text-gray-500 dark:text-gray-400 mb-4">
-              <Show 
+              <Show
                 when={activeFilterCount() > 0 || search()}
                 fallback="Start by adding your first resource"
               >
                 Try adjusting your filters
               </Show>
             </p>
-            <Show when={!activeFilterCount() && !search()}>
-              <Button onClick={props.onAddClick} icon={<PlusIcon size={18} />}>
-                Add Resource
-              </Button>
-            </Show>
           </div>
         }
       >
         <div
           class={
-            view() === 'grid'
-              ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
-              : 'space-y-3'
+            view() === "grid"
+              ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              : "space-y-3"
           }
         >
           <For each={filteredResources()}>

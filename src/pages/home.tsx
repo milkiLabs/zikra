@@ -2,18 +2,19 @@
  * Home Page - Resource Library
  */
 
-import { Component, createSignal, onMount } from 'solid-js';
+import { Component, onMount } from 'solid-js';
 import { useSearchParams } from '@solidjs/router';
-import { ResourceList, AddResourceModal } from '../components/resources';
+import { ResourceList } from '../components/resources';
+import { useApp } from '../contexts/AppContext';
 
 const Home: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [showAddModal, setShowAddModal] = createSignal(false);
+  const app = useApp();
 
   // Handle PWA shortcut ?action=add
   onMount(() => {
     if (searchParams.action === 'add') {
-      setShowAddModal(true);
+      app.setShowAddModal(true);
       // Clear the action param
       setSearchParams({ action: undefined });
     }
@@ -31,18 +32,13 @@ const Home: Component = () => {
       </div>
 
       <ResourceList
-        onAddClick={() => setShowAddModal(true)}
+        onAddClick={() => app.setShowAddModal(true)}
         onEditResource={(resource) => {
           console.log('Edit resource:', resource);
         }}
         onDeleteResource={(resource) => {
           console.log('Delete resource:', resource);
         }}
-      />
-
-      <AddResourceModal
-        open={showAddModal()}
-        onClose={() => setShowAddModal(false)}
       />
     </div>
   );

@@ -50,6 +50,8 @@ interface AppContextValue {
   syncing: boolean;
   online: boolean;
   userAddress: string | null;
+  showAddModal: boolean;
+  setShowAddModal: (show: boolean) => void;
   connect: (userAddress: string) => Promise<void>;
   disconnect: () => void;
   syncNow: () => void;
@@ -65,6 +67,7 @@ export const AppProvider: ParentComponent = (props) => {
   const [initialized, setInitialized] = createSignal(false);
   const [connecting, setConnecting] = createSignal(false);
   const [online, setOnline] = createSignal(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [showAddModal, setShowAddModal] = createSignal(false);
 
   // Create store object
   const store: AppStore = {
@@ -135,6 +138,8 @@ export const AppProvider: ParentComponent = (props) => {
     get syncing() { return connectionState().syncing; },
     get online() { return online(); },
     get userAddress() { return connectionState().userAddress; },
+    get showAddModal() { return showAddModal(); },
+    setShowAddModal,
     connect,
     disconnect,
     syncNow,

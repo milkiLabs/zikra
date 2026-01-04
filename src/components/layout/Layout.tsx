@@ -16,7 +16,6 @@ export interface LayoutProps {
 export const Layout: Component<LayoutProps> = (props) => {
   const app = useApp();
   const [sidebarOpen, setSidebarOpen] = createSignal(false);
-  const [showAddModal, setShowAddModal] = createSignal(false);
 
   return (
     <Show
@@ -33,7 +32,6 @@ export const Layout: Component<LayoutProps> = (props) => {
       <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header
           onMenuClick={() => setSidebarOpen(true)}
-          onAddClick={() => setShowAddModal(true)}
         />
 
         <div class="flex">
@@ -50,8 +48,8 @@ export const Layout: Component<LayoutProps> = (props) => {
         </div>
 
         <AddResourceModal
-          open={showAddModal()}
-          onClose={() => setShowAddModal(false)}
+          open={app.showAddModal}
+          onClose={() => app.setShowAddModal(false)}
         />
       </div>
     </Show>
