@@ -22,18 +22,38 @@ const ShareTarget: Component = () => {
   const [resourceTitle, setResourceTitle] = createSignal<string>('');
 
   onMount(async () => {
-    // Wait for app to be ready
-    if (!app.isReady() || !app.store) {
-      const checkReady = setInterval(() => {
+    // Wait for app to be ready with timeout
+    const waitForReady = (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        // Check immediately
         if (app.isReady() && app.store) {
-          clearInterval(checkReady);
-          processShare();
+          resolve();
+          return;
         }
-      }, 100);
-      return;
-    }
+        
+        const timeout = setTimeout(() => {
+          clearInterval(checkReady);
+          reject(new Error('App initialization timed out'));
+        }, 10000); // 10 second timeout
+        
+        const checkReady = setInterval(() => {
+          if (app.isReady() && app.store) {
+            clearInterval(checkReady);
+            clearTimeout(timeout);
+            resolve();
+          }
+        }, 100);
+      });
+    };
 
-    await processShare();
+    try {
+      await waitForReady();
+      await processShare();
+    } catch (err) {
+      console.error('Share target initialization error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to initialize app');
+      setState('error');
+    }
   });
 
   const processShare = async () => {

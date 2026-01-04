@@ -146,7 +146,7 @@ export const AppProvider: ParentComponent = (props) => {
     // Aliases
     isReady: () => initialized(),
     isConnected: () => connectionState().connected,
-    store: initialized() ? store : null,
+    get store() { return initialized() ? store : null; },
   };
 
   return (
