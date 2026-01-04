@@ -1,13 +1,16 @@
 /**
  * RemoteStorage Configuration and Instance
  * 
- * This file creates and configures the RemoteStorage instance
- * that will be used throughout the app.
+ * OFFLINE-FIRST ARCHITECTURE (following RemoteStorage.js best practices):
  * 
- * OFFLINE-FIRST ARCHITECTURE:
- * - App reads/writes to local cache immediately
- * - Sync happens in background when connected
- * - No blocking on sync - app is always responsive
+ * 1. All read operations use `maxAge: false` → always return from local cache
+ * 2. All write operations go to local cache first → sync happens in background
+ * 3. The app works fully offline, syncs when online and connected
+ * 
+ * Key insight from RS docs:
+ * "If the maxAge requirement is set to false, or the library is in offline mode,
+ * or no remote storage is connected, the promise will always be fulfilled with
+ * data from the local store."
  */
 
 import RemoteStorage from 'remotestoragejs';
@@ -16,223 +19,155 @@ import { categoriesModule } from './modules/categories';
 import { topicsModule } from './modules/topics';
 import { settingsModule } from './modules/settings';
 
-// Sync interval in milliseconds (5 minutes)
-const SYNC_INTERVAL = 5 * 60 * 1000;
+// ============================================
+// RemoteStorage Instance
+// ============================================
 
-// Create RemoteStorage instance with offline-first configuration
 export const remoteStorage = new RemoteStorage({
-  // Enable local caching - this is the key for offline-first
+  // Enable local caching (IndexedDB) - essential for offline-first
   cache: true,
   
-  // Configure which events we want to receive
+  // Change events configuration
   changeEvents: {
-    local: true,      // Changes from local operations
-    window: true,     // Changes from other browser tabs/windows
-    remote: true,     // Changes synced from remote
-    conflict: true,   // Conflicts between local and remote
+    local: true,      // Emit for local cache reads (fires on startup for cached items)
+    window: true,     // Emit for changes from other tabs
+    remote: true,     // Emit when remote changes are synced
+    conflict: true,   // Emit when local/remote conflict occurs
   },
   
-  // Enable logging in development
+  // Debug logging in development
   logging: import.meta.env.DEV,
-  
-  // Request timeout
-  requestTimeout: 30000,
 });
 
-// NOTE: We don't call stopSync() here. Instead, we use maxAge=false in all
-// read operations (getAll, getObject, getListing) to ensure they always
-// return from local cache without hitting the network. This is the proper
-// offline-first approach per RemoteStorage.js documentation.
-// Sync will happen naturally in the background when online.
+// ============================================
+// Module Registration
+// ============================================
 
-// Add modules explicitly after creation
 remoteStorage.addModule(resourcesModule);
 remoteStorage.addModule(categoriesModule);
 remoteStorage.addModule(topicsModule);
 remoteStorage.addModule(settingsModule);
 
-// Configure access scopes for all modules
+// Claim read/write access (requested during OAuth)
 remoteStorage.access.claim('resources', 'rw');
 remoteStorage.access.claim('categories', 'rw');
 remoteStorage.access.claim('topics', 'rw');
 remoteStorage.access.claim('settings', 'rw');
 
-// Enable caching for our modules (FLUSH strategy for offline-first)
-// This means data is written to cache immediately and synced later
+// Enable caching with 'ALL' strategy (proactively sync everything)
 remoteStorage.caching.enable('/resources/');
 remoteStorage.caching.enable('/categories/');
 remoteStorage.caching.enable('/topics/');
 remoteStorage.caching.enable('/settings/');
 
 // ============================================
-// Sync State Management
+// Event Handlers & State
 // ============================================
 
-let syncIntervalId: ReturnType<typeof setInterval> | null = null;
+// Track online status locally (RS also tracks this via network-offline/online events)
 let isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
 
-// Track online/offline status
 if (typeof window !== 'undefined') {
-  window.addEventListener('online', () => {
-    isOnline = true;
-    // Trigger sync when coming back online
-    triggerBackgroundSync();
-  });
-  
-  window.addEventListener('offline', () => {
-    isOnline = false;
-  });
+  window.addEventListener('online', () => { isOnline = true; });
+  window.addEventListener('offline', () => { isOnline = false; });
 }
 
-/**
- * Trigger a background sync if connected and online
- * This is non-blocking and won't affect app responsiveness
- */
-export function triggerBackgroundSync(): void {
-  // Double-check online status using navigator
-  const currentlyOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
-  isOnline = currentlyOnline;
-  
-  if (!isOnline) {
-    if (import.meta.env.DEV) {
-      console.log('[Sync] Skipping sync - offline');
-    }
-    return;
-  }
-  
-  if (!remoteStorage.connected) {
-    if (import.meta.env.DEV) {
-      console.log('[Sync] Skipping sync - not connected to remote');
-    }
-    return;
-  }
-  
-  // Trigger sync without blocking - silently handle errors
-  remoteStorage.startSync().catch((err) => {
-    // Only log in dev, don't show errors to user for background sync
-    if (import.meta.env.DEV) {
-      console.log('[Sync] Background sync failed (will retry):', err.message);
-    }
-  });
-}
-
-/**
- * Start periodic background sync
- * Call this after the app is initialized
- */
-export function startPeriodicSync(): void {
-  if (syncIntervalId) {
-    return; // Already running
-  }
-  
-  // Do an initial sync
-  triggerBackgroundSync();
-  
-  // Set up periodic sync
-  syncIntervalId = setInterval(() => {
-    triggerBackgroundSync();
-  }, SYNC_INTERVAL);
-  
+// Event handlers for debugging and state tracking
+remoteStorage.on('ready', () => {
   if (import.meta.env.DEV) {
-    console.log(`[Sync] Started periodic sync every ${SYNC_INTERVAL / 1000}s`);
+    console.log('[RS] Ready');
   }
-}
+});
 
-/**
- * Stop periodic background sync
- */
-export function stopPeriodicSync(): void {
-  if (syncIntervalId) {
-    clearInterval(syncIntervalId);
-    syncIntervalId = null;
-    if (import.meta.env.DEV) {
-      console.log('[Sync] Stopped periodic sync');
-    }
-  }
-}
-
-/**
- * Get current sync/connection status
- */
-export function getSyncStatus(): {
-  online: boolean;
-  connected: boolean;
-  syncing: boolean;
-} {
-  return {
-    online: isOnline,
-    connected: remoteStorage.connected,
-    syncing: Boolean((remoteStorage as any).sync?._tasks?.length),
-  };
-}
-
-// Set up sync event handlers
 remoteStorage.on('connected', () => {
   if (import.meta.env.DEV) {
-    console.log('[Storage] Connected to remote storage');
-  }
-  // Only start sync if we're online
-  if (isOnline) {
-    startPeriodicSync();
+    console.log('[RS] Connected:', remoteStorage.remote.userAddress);
   }
 });
 
 remoteStorage.on('disconnected', () => {
   if (import.meta.env.DEV) {
-    console.log('[Storage] Disconnected - stopping sync');
+    console.log('[RS] Disconnected');
   }
-  stopPeriodicSync();
 });
 
-remoteStorage.on('sync-done', () => {
+remoteStorage.on('not-connected', () => {
   if (import.meta.env.DEV) {
-    console.log('[Storage] Sync completed');
+    console.log('[RS] Not connected (anonymous mode)');
   }
 });
 
-remoteStorage.on('sync-req-done', () => {
-  // Individual sync request completed
+remoteStorage.on('network-offline', () => {
+  isOnline = false;
+  if (import.meta.env.DEV) {
+    console.log('[RS] Network offline');
+  }
+});
+
+remoteStorage.on('network-online', () => {
+  isOnline = true;
+  if (import.meta.env.DEV) {
+    console.log('[RS] Network online');
+  }
+});
+
+remoteStorage.on('sync-done', (result: unknown) => {
+  const syncResult = result as { completed?: boolean } | undefined;
+  if (import.meta.env.DEV) {
+    console.log('[RS] Sync done:', syncResult?.completed ? 'completed' : 'incomplete');
+  }
 });
 
 remoteStorage.on('error', (error: unknown) => {
-  // Don't log sync errors when offline - they're expected
-  if (!isOnline) {
+  const msg = error instanceof Error ? error.message : String(error);
+  // Network/sync errors are expected when offline, don't log them prominently
+  if (msg.includes('Sync failed') || msg.includes('Network') || !isOnline) {
     if (import.meta.env.DEV) {
-      console.log('[Storage] Ignoring error while offline');
-    }
-    return;
-  }
-  
-  // Log other errors
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  if (errorMessage.includes('Sync failed') || errorMessage.includes('Network')) {
-    // Network errors during sync are expected sometimes, don't alarm the user
-    if (import.meta.env.DEV) {
-      console.log('[Storage] Sync error (will retry):', errorMessage);
+      console.log('[RS] Sync error (will retry):', msg);
     }
   } else {
-    console.error('[Storage] RemoteStorage error:', error);
+    console.error('[RS] Error:', error);
   }
 });
 
-// Handle conflicts by keeping local version (offline-first strategy)
-remoteStorage.on('conflict', (event: any) => {
-  console.warn('[Storage] Conflict detected, keeping local version:', event);
-  // In offline-first, local changes take precedence
-  // The user's most recent action wins
+remoteStorage.on('conflict', (event: unknown) => {
+  console.warn('[RS] Conflict:', event);
+  // Remote version will be adopted; UI should handle conflicts if needed
 });
 
-// Debug: Log that modules are set up
-if (import.meta.env.DEV) {
-  console.log('RemoteStorage modules registered:', {
-    resources: !!remoteStorage.resources,
-    categories: !!remoteStorage.categories,
-    topics: !!remoteStorage.topics,
-    settings: !!remoteStorage.settings,
+// ============================================
+// Utility Exports
+// ============================================
+
+/**
+ * Get current connection/sync status
+ */
+export function getStatus() {
+  return {
+    online: isOnline,
+    connected: remoteStorage.connected,
+    userAddress: remoteStorage.remote?.userAddress ?? null,
+  };
+}
+
+/**
+ * Manually trigger sync (for pull-to-refresh, etc.)
+ */
+export function triggerSync(): Promise<void> {
+  if (!remoteStorage.connected || !isOnline) {
+    return Promise.resolve();
+  }
+  return remoteStorage.startSync().catch((err) => {
+    if (import.meta.env.DEV) {
+      console.log('[RS] Manual sync failed:', err.message);
+    }
   });
 }
 
-// Export typed module accessors
+// ============================================
+// Type Declarations
+// ============================================
+
 export interface ZikraModules {
   resources: ReturnType<typeof resourcesModule.builder>['exports'];
   categories: ReturnType<typeof categoriesModule.builder>['exports'];

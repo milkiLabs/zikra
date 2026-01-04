@@ -29,9 +29,7 @@ import {
 } from '../lib/stores';
 import { 
   remoteStorage, 
-  startPeriodicSync, 
-  stopPeriodicSync,
-  triggerBackgroundSync,
+  triggerSync,
 } from '../lib/storage';
 
 interface AppStore {
@@ -95,17 +93,13 @@ export const AppProvider: ParentComponent = (props) => {
     // Apply theme
     applyTheme(settingsStore.theme);
 
-    // Start background sync if already connected
-    // This happens in background and doesn't block the app
-    if (remoteStorage.connected) {
-      startPeriodicSync();
-    }
+    // RemoteStorage handles its own sync automatically when connected
+    // No need to manually start/stop sync here
 
     // Cleanup on unmount
     onCleanup(() => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
-      stopPeriodicSync();
     });
   });
 
@@ -120,20 +114,18 @@ export const AppProvider: ParentComponent = (props) => {
     setConnecting(true);
     try {
       await remoteStorage.connect(userAddress);
-      // Sync will start automatically via the 'connected' event handler
     } finally {
       setConnecting(false);
     }
   };
 
   const disconnect = () => {
-    stopPeriodicSync();
     remoteStorage.disconnect();
   };
 
   // Manual sync trigger
   const syncNow = () => {
-    triggerBackgroundSync();
+    triggerSync();
   };
 
   const value: AppContextValue = {
