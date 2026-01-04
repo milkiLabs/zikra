@@ -50,6 +50,7 @@ export const Layout: Component<LayoutProps> = (props) => {
         <AddResourceModal
           open={app.showAddModal}
           onClose={() => app.setShowAddModal(false)}
+          initialUrl={app.sharedUrl || undefined}
         />
       </div>
     </Show>

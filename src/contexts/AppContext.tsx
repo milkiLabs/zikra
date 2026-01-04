@@ -52,6 +52,8 @@ interface AppContextValue {
   userAddress: string | null;
   showAddModal: boolean;
   setShowAddModal: (show: boolean) => void;
+  sharedUrl: string | null;
+  openAddModalWithUrl: (url: string) => void;
   connect: (userAddress: string) => Promise<void>;
   disconnect: () => void;
   syncNow: () => void;
@@ -68,6 +70,21 @@ export const AppProvider: ParentComponent = (props) => {
   const [connecting, setConnecting] = createSignal(false);
   const [online, setOnline] = createSignal(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [showAddModal, setShowAddModal] = createSignal(false);
+  const [sharedUrl, setSharedUrl] = createSignal<string | null>(null);
+
+  // Open add modal with a pre-filled URL (used by share target)
+  const openAddModalWithUrl = (url: string) => {
+    setSharedUrl(url);
+    setShowAddModal(true);
+  };
+
+  // Clear shared URL when modal closes
+  const handleSetShowAddModal = (show: boolean) => {
+    setShowAddModal(show);
+    if (!show) {
+      setSharedUrl(null);
+    }
+  };
 
   // Create store object
   const store: AppStore = {
@@ -139,7 +156,9 @@ export const AppProvider: ParentComponent = (props) => {
     get online() { return online(); },
     get userAddress() { return connectionState().userAddress; },
     get showAddModal() { return showAddModal(); },
-    setShowAddModal,
+    setShowAddModal: handleSetShowAddModal,
+    get sharedUrl() { return sharedUrl(); },
+    openAddModalWithUrl,
     connect,
     disconnect,
     syncNow,

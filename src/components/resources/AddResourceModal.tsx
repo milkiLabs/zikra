@@ -9,6 +9,7 @@ import {
   createSignal, 
   Show, 
   createMemo,
+  createEffect,
   For,
   batch,
 } from 'solid-js';
@@ -116,6 +117,15 @@ export const AddResourceModal: Component<AddResourceModalProps> = (props) => {
       color: t.color,
     }))
   );
+
+  // Auto-fetch when modal opens with initialUrl
+  createEffect(() => {
+    if (props.open && props.initialUrl && step() === 'input' && !loading()) {
+      setInput(props.initialUrl);
+      // Trigger fetch after a small delay to ensure state is set
+      setTimeout(() => handleFetch(), 100);
+    }
+  });
 
   // Reset form when modal closes
   const handleClose = () => {
