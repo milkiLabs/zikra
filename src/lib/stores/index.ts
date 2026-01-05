@@ -9,7 +9,7 @@
 import { createSignal, createEffect, onCleanup, batch } from 'solid-js';
 import { createStore, produce, reconcile } from 'solid-js/store';
 import type { Resource, Category, Topic, AppSettings, ResourceFilter } from '../../types';
-import { remoteStorage } from '../storage';
+import { remoteStorage, readyPromise } from '../storage';
 import { generateId } from '../utils/id';
 
 // ============================================
@@ -681,22 +681,7 @@ export async function initAllStores(): Promise<void> {
   // OFFLINE-FIRST: Don't wait for connection, just load from local cache
   // The 'ready' event means remoteStorage has finished initializing its local cache
   // We don't need to be connected to start using the app
-  await new Promise<void>((resolve) => {
-    let resolved = false;
-    const checkReady = () => {
-      if (!resolved) {
-        resolved = true;
-        resolve();
-      }
-    };
-
-    remoteStorage.on('ready', checkReady);
-    remoteStorage.on('not-connected', checkReady);
-
-    // Fallback timeout to ensure app never hangs indefinitely
-    // Increased from 500ms to 2000ms to allow slower mobile devices to initialize IndexedDB
-    setTimeout(checkReady, 2000);
-  });
+  await readyPromise;
 
   // Initialize all stores from local cache in parallel
   // This reads from IndexedDB, not network

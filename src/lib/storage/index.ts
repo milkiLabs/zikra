@@ -26,7 +26,7 @@ import { settingsModule } from './modules/settings';
 export const remoteStorage = new RemoteStorage({
   // Enable local caching (IndexedDB) - essential for offline-first
   cache: true,
-  
+
   // Change events configuration
   changeEvents: {
     local: true,      // Emit for local cache reads (fires on startup for cached items)
@@ -34,7 +34,7 @@ export const remoteStorage = new RemoteStorage({
     remote: true,     // Emit when remote changes are synced
     conflict: true,   // Emit when local/remote conflict occurs
   },
-  
+
   // Debug logging in development
   logging: import.meta.env.DEV,
 });
@@ -55,10 +55,36 @@ remoteStorage.access.claim('topics', 'rw');
 remoteStorage.access.claim('settings', 'rw');
 
 // Enable caching with 'ALL' strategy (proactively sync everything)
-remoteStorage.caching.enable('/resources/');
-remoteStorage.caching.enable('/categories/');
-remoteStorage.caching.enable('/topics/');
-remoteStorage.caching.enable('/settings/');
+// @ts-ignore - Strategy 'ALL' is supported but missing in beta types
+remoteStorage.caching.enable('/resources/', 'ALL');
+// @ts-ignore
+remoteStorage.caching.enable('/categories/', 'ALL');
+// @ts-ignore
+remoteStorage.caching.enable('/topics/', 'ALL');
+// @ts-ignore
+remoteStorage.caching.enable('/settings/', 'ALL');
+
+// ============================================
+// Ready State Promise (Solves Race Conditions)
+// ============================================
+
+/**
+ * Promise that resolves when RemoteStorage is ready for use (offline or online).
+ * This captures the 'ready' or 'not-connected' event even if it fires before
+ * the app consumes it, preventing startup race conditions.
+ */
+export const readyPromise = new Promise<void>((resolve) => {
+  let resolved = false;
+  const onReady = () => {
+    if (!resolved) {
+      resolved = true;
+      resolve();
+    }
+  };
+
+  remoteStorage.on('ready', onReady);
+  remoteStorage.on('not-connected', onReady);
+});
 
 // ============================================
 // Event Handlers & State
