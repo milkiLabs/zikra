@@ -35,7 +35,7 @@ const [resourcesStore, setResourcesStore] = createStore<ResourcesState>(initialR
 // Initialize resources from storage
 export async function initResources(): Promise<void> {
   if (resourcesStore.initialized) return;
-  
+
   setResourcesStore('loading', true);
   try {
     if (!remoteStorage.resources) {
@@ -62,7 +62,7 @@ export async function initResources(): Promise<void> {
 export function subscribeToResources(): () => void {
   if (!remoteStorage.resources) {
     console.warn('Resources module not available for subscription');
-    return () => {};
+    return () => { };
   }
   const unsubscribe = remoteStorage.resources.onChange((event: any) => {
     if (event.relativePath?.startsWith('resources/')) {
@@ -93,7 +93,7 @@ export const resourceActions = {
   async create(input: Partial<Resource>): Promise<Resource> {
     const id = input.id || generateId();
     const now = new Date().toISOString();
-    
+
     const resource: Resource = removeUndefined({
       id,
       type: input.type || 'webpage',
@@ -223,15 +223,15 @@ export const resourceActions = {
 export const selectResources = () => resourcesStore;
 export const selectResourcesArray = () => Object.values(resourcesStore.items);
 export const selectResourceById = (id: string) => resourcesStore.items[id];
-export const selectResourcesByType = (type: Resource['type']) => 
+export const selectResourcesByType = (type: Resource['type']) =>
   Object.values(resourcesStore.items).filter(r => r.type === type);
-export const selectResourcesByCategory = (categoryId: string) => 
+export const selectResourcesByCategory = (categoryId: string) =>
   Object.values(resourcesStore.items).filter(r => r.categoryIds.includes(categoryId));
-export const selectResourcesByTopic = (topicId: string) => 
+export const selectResourcesByTopic = (topicId: string) =>
   Object.values(resourcesStore.items).filter(r => r.topicIds.includes(topicId));
-export const selectFavoriteResources = () => 
+export const selectFavoriteResources = () =>
   Object.values(resourcesStore.items).filter(r => r.isFavorite);
-export const selectActiveResources = () => 
+export const selectActiveResources = () =>
   Object.values(resourcesStore.items).filter(r => r.status === 'active');
 
 // Filter resources
@@ -258,7 +258,7 @@ export function filterResources(filter: ResourceFilter): Resource[] {
   }
   if (filter.search) {
     const search = filter.search.toLowerCase();
-    items = items.filter(r => 
+    items = items.filter(r =>
       r.title.toLowerCase().includes(search) ||
       r.description?.toLowerCase().includes(search) ||
       r.tags.some(t => t.toLowerCase().includes(search))
@@ -306,7 +306,7 @@ const [categoriesStore, setCategoriesStore] = createStore<CategoriesState>(initi
 
 export async function initCategories(): Promise<void> {
   if (categoriesStore.initialized) return;
-  
+
   setCategoriesStore('loading', true);
   try {
     if (!remoteStorage.categories) {
@@ -332,7 +332,7 @@ export async function initCategories(): Promise<void> {
 export function subscribeToCategories(): () => void {
   if (!remoteStorage.categories) {
     console.warn('Categories module not available for subscription');
-    return () => {};
+    return () => { };
   }
   const unsubscribe = remoteStorage.categories.onChange((event: any) => {
     if (event.relativePath?.startsWith('categories/')) {
@@ -393,12 +393,12 @@ export const categoryActions = {
 };
 
 export const selectCategories = () => categoriesStore;
-export const selectCategoriesArray = () => 
+export const selectCategoriesArray = () =>
   Object.values(categoriesStore.items).sort((a, b) => a.order - b.order);
 export const selectCategoryById = (id: string) => categoriesStore.items[id];
-export const selectRootCategories = () => 
+export const selectRootCategories = () =>
   Object.values(categoriesStore.items).filter(c => !c.parentId).sort((a, b) => a.order - b.order);
-export const selectChildCategories = (parentId: string) => 
+export const selectChildCategories = (parentId: string) =>
   Object.values(categoriesStore.items).filter(c => c.parentId === parentId).sort((a, b) => a.order - b.order);
 
 // ============================================
@@ -423,7 +423,7 @@ const [topicsStore, setTopicsStore] = createStore<TopicsState>(initialTopicsStat
 
 export async function initTopics(): Promise<void> {
   if (topicsStore.initialized) return;
-  
+
   setTopicsStore('loading', true);
   try {
     if (!remoteStorage.topics) {
@@ -449,7 +449,7 @@ export async function initTopics(): Promise<void> {
 export function subscribeToTopics(): () => void {
   if (!remoteStorage.topics) {
     console.warn('Topics module not available for subscription');
-    return () => {};
+    return () => { };
   }
   const unsubscribe = remoteStorage.topics.onChange((event: any) => {
     if (event.relativePath?.startsWith('topics/')) {
@@ -526,10 +526,10 @@ export const topicActions = {
 };
 
 export const selectTopics = () => topicsStore;
-export const selectTopicsArray = () => 
+export const selectTopicsArray = () =>
   Object.values(topicsStore.items).sort((a, b) => a.order - b.order);
 export const selectTopicById = (id: string) => topicsStore.items[id];
-export const selectTopicsByCategory = (categoryId: string) => 
+export const selectTopicsByCategory = (categoryId: string) =>
   Object.values(topicsStore.items).filter(t => t.categoryIds.includes(categoryId)).sort((a, b) => a.order - b.order);
 
 // ============================================
@@ -552,7 +552,7 @@ const [settingsStore, setSettingsStore] = createStore<AppSettings & { initialize
 
 export async function initSettings(): Promise<void> {
   if (settingsStore.initialized) return;
-  
+
   try {
     if (!remoteStorage.settings) {
       console.warn('Settings module not available yet');
@@ -572,7 +572,7 @@ export async function initSettings(): Promise<void> {
 export function subscribeToSettings(): () => void {
   if (!remoteStorage.settings) {
     console.warn('Settings module not available for subscription');
-    return () => {};
+    return () => { };
   }
   const unsubscribe = remoteStorage.settings.onChange((event: any) => {
     if (event.relativePath === 'settings/app' && event.newValue) {
@@ -677,29 +677,25 @@ export { connectionState };
 
 export async function initAllStores(): Promise<void> {
   const cleanup = initConnectionState();
-  
+
   // OFFLINE-FIRST: Don't wait for connection, just load from local cache
   // The 'ready' event means remoteStorage has finished initializing its local cache
   // We don't need to be connected to start using the app
   await new Promise<void>((resolve) => {
-    // Check if already ready (has loaded local cache)
+    let resolved = false;
     const checkReady = () => {
-      // remoteStorage is ready once it has loaded from IndexedDB
-      // We don't need to wait for network connection
-      resolve();
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
     };
-    
-    // Give it a brief moment to initialize, then proceed
-    // This ensures IndexedDB cache is available
-    if (remoteStorage.caching) {
-      // Already initialized
-      setTimeout(checkReady, 50);
-    } else {
-      remoteStorage.on('ready', checkReady);
-      remoteStorage.on('not-connected', checkReady);
-      // Fallback timeout - never block app startup
-      setTimeout(checkReady, 500);
-    }
+
+    remoteStorage.on('ready', checkReady);
+    remoteStorage.on('not-connected', checkReady);
+
+    // Fallback timeout to ensure app never hangs indefinitely
+    // Increased from 500ms to 2000ms to allow slower mobile devices to initialize IndexedDB
+    setTimeout(checkReady, 2000);
   });
 
   // Initialize all stores from local cache in parallel
