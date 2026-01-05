@@ -153,7 +153,7 @@ export const AddResourceModal: Component<AddResourceModalProps> = (props) => {
       setSelectedCategories([]);
       setSelectedTopics([]);
       setTags([]);
-      setTouchedFields(new Set());
+      setTouchedFields(new Set<string>());
       setError(null);
       setLoading(false);
       setNewCategoryName("");
@@ -343,21 +343,19 @@ export const AddResourceModal: Component<AddResourceModalProps> = (props) => {
         <div class="flex gap-2 p-1 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <button
             onClick={switchToAuto}
-            class={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              mode() === "auto"
+            class={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${mode() === "auto"
                 ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow"
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            }`}
+              }`}
           >
             Auto Detect
           </button>
           <button
             onClick={switchToManual}
-            class={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              mode() === "manual"
+            class={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${mode() === "manual"
                 ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow"
                 : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
-            }`}
+              }`}
           >
             Manual Input
           </button>
