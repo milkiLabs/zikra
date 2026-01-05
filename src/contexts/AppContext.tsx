@@ -5,18 +5,18 @@
  * Implements offline-first architecture with background sync.
  */
 
-import { 
-  createContext, 
-  useContext, 
-  ParentComponent, 
+import {
+  createContext,
+  useContext,
+  ParentComponent,
   createSignal,
   onMount,
   onCleanup,
   createEffect,
   Accessor,
 } from 'solid-js';
-import { 
-  initAllStores, 
+import {
+  initAllStores,
   connectionState,
   settingsStore,
   resourcesStore,
@@ -27,8 +27,8 @@ import {
   topicActions,
   settingsActions,
 } from '../lib/stores';
-import { 
-  remoteStorage, 
+import {
+  remoteStorage,
   triggerSync,
 } from '../lib/storage';
 
@@ -107,7 +107,8 @@ export const AppProvider: ParentComponent = (props) => {
 
     // Initialize all stores from local cache (this is fast, no network required)
     // The app is immediately usable after this, even offline
-    await initAllStores();
+    // We do NOT await this to allow immediate UI rendering (optimistic UI)
+    initAllStores();
     setInitialized(true);
 
     // Apply theme
@@ -185,7 +186,7 @@ export function useApp(): AppContextValue {
 
 function applyTheme(theme: 'light' | 'dark' | 'system') {
   const root = document.documentElement;
-  
+
   if (theme === 'system') {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     root.classList.toggle('dark', prefersDark);
